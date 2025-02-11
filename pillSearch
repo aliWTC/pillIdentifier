@@ -1,0 +1,70 @@
+import cv2 as cv
+import pandas as pd
+
+
+
+while True:
+    # Load the CSV file
+    csv_path = "/Users/abdelalizerrouq/Desktop/PIll Identification/rximage/table.csv"  # Replace with the actual path to your CSV file
+    metadata = pd.read_csv(csv_path)
+
+
+
+    #asking for the pill name
+    pill_name = input("Input a pill name: ")
+
+
+
+    #finding the row where the pill name is
+    row = metadata[metadata["name"] == pill_name]
+
+    matches = metadata[metadata["name"].str.contains(pill_name, case=False, na=False)]
+
+    counter = 0
+
+    matchesLi = list()
+    if matches is not None:
+        print("Matching pills:")
+        for index, row in matches.iterrows():
+            counter+=1
+            print(f"[{counter}]: Pill Name: {row['name']}")
+            print("---")
+
+            if row['name'] not in matchesLi:
+                matchesLi.append(f'{counter}:{row["name"]}')
+
+
+        varying_selection = input("Which one did you want to select?: ")
+
+    for i in matchesLi:
+        nameAndNum = i.split(":")
+        if varying_selection in nameAndNum[0]:
+            print(nameAndNum[1])
+            pill_name = nameAndNum[1]
+            break
+        else:
+            continue
+
+    if not row.empty:
+        # Access the value in another column (e.g., "image_path")
+        row = matches[matches["name"] == pill_name]
+        imgpath = row["RXNAV 600"].values[0] # Replace "image_path" with the actual column name
+        print(f"Image path for {pill_name}: {imgpath}")
+
+
+    def load_image(image_path, target_size=(224, 224)):
+        image = cv.imread(image_path)
+        if image is None:
+            print(f"Warning: Could not load image at {image_path}")
+            return None
+
+        cv.imshow('window', image)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
+
+    filePath = '/Users/abdelalizerrouq/Desktop/PIll Identification/rximage/'
+    photoPath = imgpath
+
+    path = filePath+photoPath
+
+    load_image(path)
