@@ -1,0 +1,64 @@
+import cv2 as cv
+import pandas as pd
+import os
+import numpy as np
+
+# Function to compare two images using pixel difference
+def compare_images(image1, image2):
+    # Resize images to the same dimensions
+    image1 = cv.resize(image1, (224, 224))
+    image2 = cv.resize(image2, (224, 224))
+
+    # Calculate the absolute difference between the two images
+    difference = cv.absdiff(image1, image2)
+
+    # Convert the difference to a single score
+    similarity = np.mean(difference)
+    return similarity
+
+# Function to find the most similar pill image in the dataset
+def find_similar_pill(uploaded_image_path, metadata, image_folder):
+    uploaded_image = cv.imread(uploaded_image_path)
+    if uploaded_image is None:
+        print("Error: Could not load uploaded image. Please check the file path.")
+        return None
+
+    best_match = None
+    min_difference = float('inf')  # Start with a very high value
+
+    for index, row in metadata.iterrows():
+        dataset_image_path = os.path.join(image_folder, row["RXNAV 600"])
+        dataset_image = cv.imread(dataset_image_path)
+
+        if dataset_image is None:
+            print(f"Warning: Could not load dataset image at {dataset_image_path}")
+            continue
+
+        difference = compare_images(uploaded_image, dataset_image)
+
+        if difference < min_difference:
+            min_difference = difference
+            best_match = row["name"]
+
+    return best_match, min_difference
+
+# Main loop
+while True:
+    # Load the CSV file
+    csv_path = "/Users/abdelalizerrouq/Desktop/PIll Identification/rximage/table.csv"
+    metadata = pd.read_csv(csv_path)
+
+    # Ask the user to upload a pill image
+    uploaded_image_path = input("Enter the path to the uploaded pill image: ")
+
+    # Find the most similar pill in the dataset
+    image_folder = "/Users/abdelalizerrouq/Desktop/PIll Identification/rximage/"
+    best_match, difference = find_similar_pill(uploaded_image_path, metadata, image_folder)
+
+    if best_match:
+        print(f"The uploaded pill is most similar to: {best_match} (Pixel Difference: {difference:.2f})")
+    else:
+        print("No matching pill found in the dataset.")
+
+
+#doxycycline hyclate 50 MG Oral Capsule
